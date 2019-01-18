@@ -1,4 +1,4 @@
-# nRF52832 core implementation
+# nRF52840 core implementation
 #
 # Author: Kevin Townsend
 import os
@@ -10,33 +10,42 @@ from ..programmers import JLink
 
 
 # CONFIGID register HW ID value to name mapping.
-# List of HWID can be found at https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.nrf52832.ps.v1.1%2Fficr.html&resultof=%22FICR%22%20%22ficr%22%20
 MCU_LOOKUP = {
     0x41414141: 'AAAA',
-    0x41414142: 'AAAB',
+    0x42414141: 'BAAA',
+    0x43414141: 'CAAA',
     0x41414241: 'AABA',
     0x41414242: 'AABB',
+    0x41414341: 'AACA',
+    0x41414142: 'AAAB',
+    0x41414330: 'AAC0',
     0xFFFFFFFF: 'Unspecified'
 }
 
 # Package ID value to name mapping.
 PACKAGE_LOOKUP = {
-    0x2000: 'QFxx - 48-pin QFN',
-    0x2001: 'CIxx - 7x8 WLCSP 56 balls'
+    0x2004: 'QIxx - 73-pin aQFN',
+    0xFFFFFFFF: 'Unspecified'
 }
 
 # SRAM ID value to name mapping.
 SRAM_LOOKUP = {
     0x10: '16 KB SRAM',
     0x20: '32 KB SRAM',
-    0x40: '64 KB SRAM'
+    0x40: '64 KB SRAM',
+    0x80: '128 KB SRAM',
+    0x100: '256 KB SRAM',
+    0xFFFFFFFF: 'Unspecified'
 }
 
 # FLASH size value to name mapping.
 FLASH_LOOKUP = {
     0x80:  '128 KB Flash',
     0x100: '256 KB Flash',
-    0x200: '512 KB Flash'
+    0x200: '512 KB Flash',
+    0x400: '1 MB Flash',
+    0x800: '2 MB Flash',
+    0xFFFFFFFF: 'Unspecified'
 }
 
 # SD ID value to name mapping.
@@ -47,20 +56,20 @@ SD_LOOKUP = {
 # CONFIGID register HW ID to Segger '-device' name mapping.
 # Segger ID List: https://www.segger.com/jlink_supported_devices.html
 SEGGER_LOOKUP = {
-    0x0000: 'nRF52832_xxaa'
+    0x0000: 'nRF52840_xxaa'
 }
 
-class nRF52832_JLink(JLink):
-    # nRF52832-specific JLink programmer, required to add custom wipe command
+class nRF52840_JLink(JLink):
+    # nRF52840-specific JLink programmer, required to add custom wipe command
     # for the chip.
 
     def __init__(self):
-        # Call base STLink initializer and set it up to program the nRF52832.
-        super(nRF52832_JLink, self).__init__('Cortex-M4 r0p1, Little endian',
-            params='-device nrf52832_xxaa -if swd -speed 1000 -autoconnect 1')
+        # Call base STLink initializer and set it up to program the nRF52840.
+        super(nRF52840_JLink, self).__init__('Cortex-M4 r0p1, Little endian',
+            params='-device nrf52840_xxaa -if swd -speed 1000 -autoconnect 1')
 
     def wipe(self):
-        # Run JLink commands to wipe nRF52832 memory.
+        # Run JLink commands to wipe nRF52840 memory.
         commands = [
             'erase',          # Erase all
             'sleep 100',      # Wait again
@@ -70,13 +79,13 @@ class nRF52832_JLink(JLink):
         self.run_commands(commands)
 
 
-class nRF52832(Core):
-    """Nordic nRF52832 CPU."""
+class nRF52840(Core):
+    """Nordic nRF52840 CPU."""
     # Note that the docstring will be used as the short help description.
 
     def __init__(self):
         # Call base class constructor--MUST be done!
-        super(nRF52832, self).__init__()
+        super(nRF52840, self).__init__()
 
     def list_programmers(self):
         """Return a list of the programmer names supported by this CPU."""
@@ -87,7 +96,7 @@ class nRF52832(Core):
         the core.  Must be implemented by subclasses!
         """
         if programmer == 'jlink':
-            return nRF52832_JLink()
+            return nRF52840_JLink()
 
     def info(self, programmer):
         """Display info about the device."""
@@ -107,7 +116,7 @@ class nRF52832(Core):
         else:
             click.echo('Package     : 0x{0:04X}'.format(package))
         # Get the SRAM
-        sram = programmer.readmem8(0x1000010C)
+        sram = programmer.readmem16(0x1000010C)
         sramstring = SRAM_LOOKUP.get(sram, '0x{0:02X}'.format(package))
         if '0x' not in sramstring:
             click.echo('SRAM        : {0}'.format(sramstring))
