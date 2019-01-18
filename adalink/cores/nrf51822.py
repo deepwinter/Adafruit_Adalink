@@ -90,7 +90,7 @@ class STLink_nRF51822(STLink):
 
     def __init__(self):
         # Call base STLink initializer and set it up to program the nRF51822.
-        super(STLink_nRF51822, self).__init__(params='-f interface/stlink-v2.cfg -f target/nrf51.cfg')
+        super(STLink_nRF51822, self).__init__(params='-f interface/stlink-v2-1.cfg -f target/nrf51.cfg')
 
     def wipe(self):
         # Run OpenOCD commands to wipe nRF51822 memory.
